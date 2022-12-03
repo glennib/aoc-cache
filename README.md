@@ -7,6 +7,8 @@ This is an attempt to reduce server load for the creator.
 Downloads using [`reqwest`][reqwest], stores cache in temporary files using
 [`scratch`][scratch].
 
+Since we use [`scratch`][scratch], a `cargo clean` will remove the cache and cause new downloads for new runs.
+
 ## Example
 
 ```rust
