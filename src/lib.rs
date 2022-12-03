@@ -60,7 +60,7 @@ const TEMP_DIR_NAME: &str = "aoc_cache";
 ///
 /// [github-cookie-example]: https://github.com/wimglenn/advent-of-code-wim/issues/1
 /// [google-cookie]: https://www.google.com/search?q=adventofcode+cookie
-#[instrument]
+#[instrument(skip(cookie))]
 pub fn get_input_from_web_or_cache(url: &str, cookie: &str) -> Result<String> {
     if let Some(content) = get_cache_for_url(url)? {
         info!("returning content found in cache");
