@@ -73,6 +73,7 @@ pub fn get_input_from_web_or_cache(url: &str, cookie: &str) -> Result<String> {
     let client = Client::builder()
         .cookie_store(true)
         .cookie_provider(Arc::new(jar))
+        .user_agent("https://github.com/glennib/aoc-cache by glennib.pub@gmail.com")
         .build()?;
     let request = client.get(url_parsed).build()?;
     let response = client.execute(request)?;

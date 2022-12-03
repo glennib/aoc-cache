@@ -2,7 +2,7 @@
 name = "aoc-cache"
 description = "A way of caching your input from the great and popular Advent of Code"
 repository = "https://github.com/glennib/aoc-cache"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 keywords = ["puzzles", "advent-of-code"]
 categories = ["caching"]
