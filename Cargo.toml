@@ -1,7 +1,12 @@
 [package]
 name = "aoc-cache"
+description = "A way of caching your input from the great and popular Advent of Code"
+repository = "https://github.com/glennib/aoc-cache"
 version = "0.1.0"
 edition = "2021"
+keywords = ["puzzles", "advent-of-code"]
+categories = ["caching"]
+license-file = "LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
