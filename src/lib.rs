@@ -67,6 +67,11 @@ pub fn get_input_from_web_or_cache(url: &str, cookie: &str) -> Result<String> {
         return Ok(content);
     }
     debug!("content not found in cache, requesting from web");
+    if cookie.is_empty() {
+        return Err(Error::InvalidCookie(
+            "empty cookie is not valid".to_string(),
+        ));
+    }
     let jar = Jar::default();
     let url_parsed = url.parse()?;
     jar.add_cookie_str(cookie, &url_parsed);
@@ -76,7 +81,7 @@ pub fn get_input_from_web_or_cache(url: &str, cookie: &str) -> Result<String> {
         .user_agent("https://github.com/glennib/aoc-cache by glennib.pub@gmail.com")
         .build()?;
     let request = client.get(url_parsed).build()?;
-    let response = client.execute(request)?;
+    let response = client.execute(request)?.error_for_status()?;
     let content = response.text()?.trim().to_string();
     add_cache(url, &content)?;
     info!("returning content from web");
