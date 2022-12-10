@@ -23,6 +23,15 @@ let input: Result<String, aoc_cache::Error> = // Grabs from cache
         "https://adventofcode.com/2022/day/1/input", MY_COOKIE);
 ```
 
+> **Warning** If you use source control for your AoC solutions, take care to not
+> check in any files that contain your cookie into source control!
+>
+> Example `.gitignore`:
+> ```
+> **/target/
+> my.cookie
+> ```
+
 [Advent of Code]: https://adventofcode.com/
 
 [reqwest]: https://docs.rs/reqwest/
