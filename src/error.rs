@@ -4,8 +4,10 @@ pub enum Error {
     UrlParse(#[from] url::ParseError),
     #[error("invalid cookie error")]
     InvalidCookie(String),
-    #[error("reqwest error")]
-    Reqwest(#[from] reqwest::Error),
+    #[error("cookie parse error")]
+    CookieParse(String),
+    #[error("ureq error")]
+    UreqError(#[from] ureq::Error),
     #[error("io error")]
     Io(#[from] std::io::Error),
     #[error("duplicate error")]

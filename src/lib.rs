@@ -2,44 +2,45 @@
 //!
 //! This is an attempt to reduce server load for the creator.
 //!
-//! Downloads using [`reqwest`][reqwest], stores cache in temporary files using
+//! Downloads using [`ureq`][ureq], stores cache in temporary files using
 //! [`scratch`][scratch].
 //!
 //! # Example
 //!
 //! ```
-//! use aoc_cache::get_input_from_web_or_cache;
+//! use aoc_cache::get;
 //! // my.cookie is a file containing the cookie string.
 //! const MY_COOKIE: &str = include_str!("my.cookie");
 //! let input: Result<String, aoc_cache::Error> = // Grabs from web if it's the first run
-//!     get_input_from_web_or_cache("https://adventofcode.com/2022/day/1/input", MY_COOKIE);
+//!     get("https://adventofcode.com/2022/day/1/input", MY_COOKIE);
 //! let input: Result<String, aoc_cache::Error> = // Grabs from cache
-//!     get_input_from_web_or_cache("https://adventofcode.com/2022/day/1/input", MY_COOKIE);
+//!     get("https://adventofcode.com/2022/day/1/input", MY_COOKIE);
 //! ```
 //!
 //! [Advent of Code]: https://adventofcode.com/
-//! [reqwest]: https://docs.rs/reqwest/
+//! [ureq]: https://docs.rs/ureq/
 //! [scratch]: https://docs.rs/scratch/
 
 mod error;
 
 pub use error::Error;
 
-use reqwest::{blocking::Client, cookie::Jar};
+use cookie_store::{Cookie, CookieStore};
 use std::{
     collections::hash_map::DefaultHasher,
     fs::{read_to_string, File, OpenOptions},
     hash::{Hash, Hasher},
     io::{BufRead, BufReader, Write},
     path::{Path, PathBuf},
-    sync::Arc,
 };
-use tracing::{debug, error, info, instrument};
+use tracing::{debug, error, info, instrument, trace, warn};
+use ureq::AgentBuilder;
 
 type Result<T> = std::result::Result<T, Error>;
 
 const INDEX_FILE_NAME: &str = "index.cache";
 const TEMP_DIR_NAME: &str = "aoc_cache";
+const USER_AGENT: &str = "https://github.com/glennib/aoc-cache by glennib.pub@gmail.com";
 
 /// Gets input from the url or from cache if it has been retrieved before.
 ///
@@ -51,40 +52,58 @@ const TEMP_DIR_NAME: &str = "aoc_cache";
 /// # Example
 ///
 /// ```
-/// use aoc_cache::get_input_from_web_or_cache;
+/// use aoc_cache::get;
 /// // my.cookie is a file containing the cookie string.
 /// const MY_COOKIE: &str = include_str!("my.cookie");
 /// let input: Result<String, aoc_cache::Error> =
-///     get_input_from_web_or_cache("https://adventofcode.com/2022/day/1/input", MY_COOKIE);
+///     get("https://adventofcode.com/2022/day/1/input", MY_COOKIE);
 /// ```
 ///
 /// [github-cookie-example]: https://github.com/wimglenn/advent-of-code-wim/issues/1
 /// [google-cookie]: https://www.google.com/search?q=adventofcode+cookie
 #[instrument(skip(cookie))]
-pub fn get_input_from_web_or_cache(url: &str, cookie: &str) -> Result<String> {
+pub fn get(url: &str, cookie: &str) -> Result<String> {
     if let Some(content) = get_cache_for_url(url)? {
         info!("returning content found in cache");
         return Ok(content);
     }
     debug!("content not found in cache, requesting from web");
+    let content = get_content_from_web(url, cookie)?;
+    add_cache(url, &content)?;
+    info!("returning content from web");
+    Ok(content)
+}
+
+/// Dispatches to the `get`-function, see its documentation.
+#[deprecated]
+pub fn get_input_from_web_or_cache(url: &str, cookie: &str) -> Result<String> {
+    get(url, cookie)
+}
+
+#[instrument(skip(url, cookie))]
+fn get_content_from_web(url: &str, cookie: &str) -> Result<String> {
     if cookie.is_empty() {
         return Err(Error::InvalidCookie(
             "empty cookie is not valid".to_string(),
         ));
     }
-    let jar = Jar::default();
+
     let url_parsed = url.parse()?;
-    jar.add_cookie_str(cookie, &url_parsed);
-    let client = Client::builder()
-        .cookie_store(true)
-        .cookie_provider(Arc::new(jar))
-        .user_agent("https://github.com/glennib/aoc-cache by glennib.pub@gmail.com")
-        .build()?;
-    let request = client.get(url_parsed).build()?;
-    let response = client.execute(request)?.error_for_status()?;
-    let content = response.text()?.trim().to_string();
-    add_cache(url, &content)?;
-    info!("returning content from web");
+
+    let jar = CookieStore::load(BufReader::new(cookie.as_bytes()), |s| {
+        trace!(s, "parsed cookie from str");
+        Cookie::parse(s, &url_parsed).map(Cookie::into_owned)
+    })
+    .map_err(|_| Error::CookieParse("couldn't create cookie store".into()))?;
+
+    debug!(?jar);
+
+    let agent = AgentBuilder::new()
+        .cookie_store(jar)
+        .user_agent(USER_AGENT)
+        .build();
+    let response = agent.get(url).call()?;
+    let content = response.into_string()?.trim().to_string();
     Ok(content)
 }
 
