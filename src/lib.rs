@@ -103,7 +103,7 @@ fn get_content_from_web(url: &str, cookie: &str) -> Result<String> {
         .user_agent(USER_AGENT)
         .build();
     let response = agent.get(url).call()?;
-    let content = response.into_string()?.trim().to_string();
+    let content = response.into_string()?.trim_end().to_string();
     Ok(content)
 }
 
