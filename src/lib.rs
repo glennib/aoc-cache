@@ -7,10 +7,9 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```no_run
 //! use aoc_cache::get;
-//! // my.cookie is a file containing the cookie string.
-//! const MY_COOKIE: &str = include_str!("my.cookie");
+//! const MY_COOKIE: &str = "session=xxxxxxxxxx"; // or, e.g., `include_str!("my.cookie")`
 //! let input: Result<String, aoc_cache::Error> = // Grabs from web if it's the first run
 //!     get("https://adventofcode.com/2022/day/1/input", MY_COOKIE);
 //! let input: Result<String, aoc_cache::Error> = // Grabs from cache
@@ -51,10 +50,9 @@ const USER_AGENT: &str = "https://github.com/glennib/aoc-cache by glennib.pub@gm
 ///
 /// # Example
 ///
-/// ```
+/// ```no_run
 /// use aoc_cache::get;
-/// // my.cookie is a file containing the cookie string.
-/// const MY_COOKIE: &str = include_str!("my.cookie");
+/// const MY_COOKIE: &str = "session=xxxxxxxxxx"; // or, e.g., `include_str!("my.cookie")`
 /// let input: Result<String, aoc_cache::Error> =
 ///     get("https://adventofcode.com/2022/day/1/input", MY_COOKIE);
 /// ```
